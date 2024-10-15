@@ -1,6 +1,8 @@
 import torch
+import intel_extension_for_pytorch as ipex
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 from datasets import load_from_disk
+from neural_compressor import PostTrainingQuantConfig, quantization
 
 def tokenize_function(examples, tokenizer):
     full_texts = [f"{input}{tokenizer.eos_token}{output}" for input, output in zip(examples['input'], examples['output'])]
@@ -13,6 +15,9 @@ def train_personalized_model(model_path, output_dir, num_epochs):
     model = AutoModelForCausalLM.from_pretrained(model_path)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     tokenizer.pad_token = tokenizer.eos_token
+
+    # Optimize the model with IPEX
+    model = ipex.optimize(model)
 
     # Load and tokenize the personalized dataset
     dataset = load_from_disk("processed_personalized_dataset")
@@ -27,7 +32,7 @@ def train_personalized_model(model_path, output_dir, num_epochs):
         weight_decay=0.01,
         logging_dir='./logs',
         logging_steps=10,
-        use_cpu=True,
+        use_ipex=True,  # Enable IPEX
     )
 
     # Create Trainer instance and train
@@ -42,9 +47,26 @@ def train_personalized_model(model_path, output_dir, num_epochs):
     model.save_pretrained(output_dir)
     tokenizer.save_pretrained(output_dir)
 
-    print(f"Fine-tuning complete. Model saved to '{output_dir}'")
+    # Quantize the model
+    quantization_config = PostTrainingQuantConfig(
+        approach="static",
+        quant_format="QDQ",
+        backend="ipex",
+        calibration_sampling_size=300,
+    )
 
-if __name__ == "__main__":
+    quantized_model = quantization.fit(
+        model=model,
+        conf=quantization_config,
+        calib_dataloader=trainer.get_train_dataloader(),
+    )
+
+    # Save the quantized model
+    quantized_model.save(f"{output_dir}_quantized")
+
+    print(f"Fine-tuning and quantization complete. Models saved to '{output_dir}' and '{output_dir}_quantized'")
+
+if _name_ == "_main_":
     huggingface_model_path = "./fine_tuned_dialogpt_kisanvaani"  # Path to your pre-trained Hugging Face model
     personalized_model_path = "./fine_tuned_model_personalized"
     train_personalized_model(huggingface_model_path, personalized_model_path, num_epochs=3)
