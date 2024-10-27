@@ -228,10 +228,10 @@ useEffect(() => {
                 <FaEye className='text-lg'/>
                 View Orders
             </div>
-            <div onClick={()=> setIsDialogOpen2(true)} className='shadow-lg rounded-md p-4 text-xl font-bold flex gap-3 justify-center items-center w-1/2 border-green-500 border-2 cursor-pointer'>
+            {/* <div onClick={()=> setIsDialogOpen2(true)} className='shadow-lg rounded-md p-4 text-xl font-bold flex gap-3 justify-center items-center w-1/2 border-green-500 border-2 cursor-pointer'>
                 <FaEye className='text-lg'/>
                 Manage Requests
-            </div>
+            </div> */}
         </div>
       </section>
 
