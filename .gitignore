@@ -1,1 +1,6 @@
 crop_prediction_model2.joblib
+model\model_6\fine_tuned_model_personalized\model.safetensors
+model\model_6\fine_tuned_dialogpt_kisanvaani\model.safetensors
+model/model_6/fine_tuned_model_personalized/model.safetensors
+model/model_6/fine_tuned_dialogpt_kisanvaani/model.safetensors
+
